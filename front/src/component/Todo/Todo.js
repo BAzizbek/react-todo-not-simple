@@ -1,17 +1,11 @@
-import { useState } from 'react';
 import { useDispatch } from 'react-redux'
-import { DELETE, EDIT, DONE } from '../../redux/actionTypes/actionTypes'
+import { DELETE, DONE } from '../../redux/actionTypes/actionTypes'
+import { Link } from "react-router-dom"
 
 
 function Todo({ el }) {
 
-  const [state, setState] = useState(false);
   const dispatch = useDispatch()
-
-  const toggleState = () => {
-    setState(e => !e)
-  }
-
 
   const deleteBtn = (e) => {
     e.preventDefault();
@@ -24,21 +18,6 @@ function Todo({ el }) {
       .then(data => dispatch({ type: DELETE, payload: data }))
   }
 
-  const handlerEdit = (e) => {
-    e.preventDefault();
-    const id = e.target.parentElement.id;
-    const { edit: { value: edit } } = e.target;
-    fetch(`/todo/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-type': 'Application/json' },
-      body: JSON.stringify({ edit })
-    })
-      .then(res => res.json())
-      .then(data => dispatch({ type: EDIT, payload: data }))
-
-    toggleState()
-  }
-
   const isDone = (e) => {
     const id = e.target.parentElement.parentElement.id;
     fetch(`/todo/${id}`, {
@@ -46,32 +25,19 @@ function Todo({ el }) {
       headers: { 'Content-type': 'Application/json' },
     })
       .then(res => res.json())
-      .then(data => dispatch({ type: DONE, payload: data })
-      )
+      .then(data => dispatch({ type: DONE, payload: data }))
   }
 
   return (
-    <div id={el._id}>
+    // div 'id', sent to server
+    <div id={el._id} className='d-flex flex-column align-items-center'>
+      <div className="list-group-item list-group-item-light mb-2 w-50 d-flex flex-row align-items-center">
+        <button onClick={deleteBtn} className="btn btn-danger btn-sm ">delete</button>
+        {el.isDone && <input onChange={(e) => isDone(e)} className="form-check-input mt-0 mx-3" type="checkbox" checked />}
+        {!el.isDone && <input onChange={(e) => isDone(e)} className="form-check-input mt-0 mx-3" type="checkbox" />}
+        <Link to={`/edit/${el._id}`} style={{ textDecoration: 'none' }}>{el?.title}</Link>
 
-      { state ?
-        <form id={el?._id} onSubmit={handlerEdit}>
-          <input type='text' name='edit' required defaultValue={el?.title} />
-          <button className="btn btn-primary" >save</button>
-          <button onClick={toggleState} className="btn btn-primary" >cancel</button>
-        </form> :
-
-        <>
-          <li className="list-group-item list-group-item-info">
-            {el.isDone && <input onChange={isDone} className="form-check-input mt-0" type="checkbox" checked />}
-            {!el.isDone && <input onChange={isDone} className="form-check-input mt-0" type="checkbox" />}
-            {el?.title}
-
-            <button onClick={toggleState} className="btn btn-primary" >edit</button>
-            <button onClick={deleteBtn} className="btn btn-danger">delete</button>
-          </li>
-        </>
-      }
-
+      </div>
     </div>
   )
 }
